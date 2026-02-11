@@ -1,0 +1,6 @@
+#---
+# vars file for Sonarqube
+#
+---
+java_package: "java-17-amazon-corretto"
+
