@@ -1,0 +1,7 @@
+#---
+# defaults file for raj
+# u
+#
+---
+nginx_port: 80
+

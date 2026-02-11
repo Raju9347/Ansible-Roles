@@ -1,0 +1,6 @@
+#---
+# vars file for raju
+#
+---
+nginx_package: nginx
+iam_role_arn: "arn:aws:iam::163678233884:role/AnsibleAssumeROle"

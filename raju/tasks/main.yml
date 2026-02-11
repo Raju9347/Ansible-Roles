@@ -1,0 +1,45 @@
+---
+- name: Assume IAM role
+  command: >
+    aws sts assume-role
+    --role-arn {{ iam_role_arn }}
+    --role-session-name ansible-session
+  register: sts_output
+
+- name: Parse STS credentials
+  set_fact:
+    aws_access_key: "{{ sts_output.stdout | from_json | json_query('Credentials.AccessKeyId') }}"
+    aws_secret_key: "{{ sts_output.stdout | from_json | json_query('Credentials.SecretAccessKey') }}"
+    aws_session_token: "{{ sts_output.stdout | from_json | json_query('Credentials.SessionToken') }}"
+
+- name: Run webserver setup tasks with assumed role
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+    AWS_SESSION_TOKEN: "{{ aws_session_token }}"
+  
+  block:
+    - name: Install Nginx
+      yum:
+        name: "{{ nginx_package }}"
+        state: present
+      become: true
+
+    - name: Copy index.html
+      copy:
+        src: index.html
+        dest: /usr/share/nginx/html/index.html
+      notify: restart nginx
+
+    - name: Deploy nginx.conf
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/conf.d/default.conf
+      notify: restart nginx
+
+    - name: Ensure Nginx is running
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
